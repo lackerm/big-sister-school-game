@@ -29,6 +29,16 @@ svg{display:block;overflow:visible}
 /* rooms */
 .room-start{background:#FFE9F2}
 .room-path{background:#DFF5EC}
+.room-park{background:linear-gradient(#BFE4F7 0 430px,#A6D98E 430px 560px,#E9E4F0 560px 690px,#A6D98E 690px)}
+.sidewalk{position:absolute;top:560px;height:130px;background:repeating-linear-gradient(90deg,#E9E4F0 0 116px,#D6CFE2 116px 120px)}
+.street{position:absolute;left:830px;top:430px;width:200px;height:390px;background:#6B6F86}
+.crosswalk{position:absolute;left:830px;top:572px;width:200px;height:106px;background:repeating-linear-gradient(180deg,#fff 0 14px,transparent 14px 26px)}
+.tree{position:absolute;pointer-events:none}
+.rolling .wheel{animation:spin .7s linear infinite;transform-box:fill-box;transform-origin:center}
+.pushzone{position:absolute;touch-action:none;border-radius:40px}
+.cloth{position:absolute;transition:transform .6s cubic-bezier(.3,1.4,.5,1),opacity .6s}
+.cloth.lift{transform:translate(60px,-170px) rotate(28deg);opacity:0}
+.cloth svg,.toy svg{width:100%;height:100%}
 .room-nursery{background:linear-gradient(#E6DDFB 0 548px,#FFFFFF 548px 566px,#F2D3A8 566px)}
 .room-night{background:linear-gradient(#3E4486 0 548px,#6E73B8 548px 566px,#50508F 566px)}
 .room-living{background:linear-gradient(#FFE7A6 0 548px,#FFFFFF 548px 566px,#E9C48F 566px)}
@@ -283,7 +293,7 @@ function loc(el){const r=el.getBoundingClientRect(),w=wrap.getBoundingClientRect
 
 /* ---------- saved settings ---------- */
 const KEY='bigSisterSchool.v2';
-const ORDER=['milk','cry','gentle','wash','ask','diaper','bath','lullaby','feel','love'];
+const ORDER=['milk','cry','gentle','peek','wash','ask','diaper','bath','stroller','lullaby','feel','love'];
 const SKINS=['#F7D7C4','#F2C6A0','#E8B48F','#C68863','#A86B4A','#8D5A3C','#5E3B27'];
 const HAIRS=['#2B1D14','#5B3A29','#8A5A36','#A0652F','#C98A4B','#E3B55E'];
 let S={kid:'',baby:'',rate:0.92,voiceName:'',skin:'#F2C6A0',hair:'#5B3A29',stars:Object.fromEntries(ORDER.map(k=>[k,false]))};
@@ -414,15 +424,17 @@ const UI={
 /* ---------- art: characters ---------- */
 function sisterSVG(pose='stand',dress='#FF7EB6'){
   const sk=S.skin,hr=S.hair;
-  const E={stand:[[30,128],[90,128]],wave:[[30,128],[104,60]],raise:[[30,128],[100,42]],run:[[22,108],[100,116]],ears:[[31,60],[89,60]],hold:[[80,114],[40,114]]}[pose]||[[30,128],[90,128]];
+  const E={stand:[[30,128],[90,128]],wave:[[30,128],[104,60]],raise:[[30,128],[100,42]],run:[[22,108],[100,116]],ears:[[31,60],[89,60]],hold:[[80,114],[40,114]],push:[[124,86],[134,78]],peek:[[49,60],[71,60]],boo:[[14,50],[106,50]]}[pose]||[[30,128],[90,128]];
   const arm=(x,y,e)=>`<line x1="${x}" y1="${y}" x2="${e[0]}" y2="${e[1]}" stroke="${sk}" stroke-width="12" stroke-linecap="round"/>`;
   const arms=arm(46,96,E[0])+arm(74,96,E[1]);
   const legs=pose==='run'
     ?`<line x1="54" y1="134" x2="40" y2="156" stroke="${sk}" stroke-width="11" stroke-linecap="round"/><line x1="66" y1="134" x2="82" y2="154" stroke="${sk}" stroke-width="11" stroke-linecap="round"/><ellipse cx="38" cy="160" rx="10" ry="5.5" fill="${INK}"/><ellipse cx="85" cy="158" rx="10" ry="5.5" fill="${INK}"/>`
     :`<line x1="51" y1="134" x2="51" y2="156" stroke="${sk}" stroke-width="11" stroke-linecap="round"/><line x1="69" y1="134" x2="69" y2="156" stroke="${sk}" stroke-width="11" stroke-linecap="round"/><ellipse cx="50" cy="161" rx="10" ry="5.5" fill="${INK}"/><ellipse cx="70" cy="161" rx="10" ry="5.5" fill="${INK}"/>`;
   const motion=pose==='run'?`<path d="M4 70 H20 M0 86 H16 M6 102 H20" ${st(5,'#C9B8F5')}/>`:'';
-  const head=`<circle cx="60" cy="56" r="30" fill="${sk}"/><path d="M30 56 Q30 24 60 24 Q90 24 90 56 Q84 40 68 38 Q56 47 40 44 Q34 48 30 56 Z" fill="${hr}"/><circle cx="26" cy="42" r="6" fill="#FFD84D"/><circle cx="94" cy="42" r="6" fill="#FFD84D"/><circle cx="49" cy="60" r="3.6" fill="${INK}"/><circle cx="71" cy="60" r="3.6" fill="${INK}"/><circle cx="50.2" cy="58.8" r="1.1" fill="#fff"/><circle cx="72.2" cy="58.8" r="1.1" fill="#fff"/><ellipse cx="42" cy="68" rx="5.5" ry="3.4" fill="#FF8FAB" opacity=".55"/><ellipse cx="78" cy="68" rx="5.5" ry="3.4" fill="#FF8FAB" opacity=".55"/><path d="M52 70 Q60 77 68 70" ${st(3)}/>`;
-  return sv('0 0 120 170',`${motion}<circle cx="24" cy="58" r="15" fill="${hr}"/><circle cx="96" cy="58" r="15" fill="${hr}"/>${legs}<rect x="54" y="80" width="12" height="14" rx="5" fill="${sk}"/><path d="M44 90 Q60 84 76 90 L90 138 Q60 148 30 138 Z" fill="${dress}"/><path d="M50 90 Q60 99 70 90" ${st(3,'#fff')}/>${pose==='ears'?'':arms}${head}${pose==='ears'?arms:''}`);
+  const head=`<circle cx="60" cy="56" r="30" fill="${sk}"/><path d="M30 56 Q30 24 60 24 Q90 24 90 56 Q84 40 68 38 Q56 47 40 44 Q34 48 30 56 Z" fill="${hr}"/><circle cx="26" cy="42" r="6" fill="#FFD84D"/><circle cx="94" cy="42" r="6" fill="#FFD84D"/><circle cx="49" cy="60" r="3.6" fill="${INK}"/><circle cx="71" cy="60" r="3.6" fill="${INK}"/><circle cx="50.2" cy="58.8" r="1.1" fill="#fff"/><circle cx="72.2" cy="58.8" r="1.1" fill="#fff"/><ellipse cx="42" cy="68" rx="5.5" ry="3.4" fill="#FF8FAB" opacity=".55"/><ellipse cx="78" cy="68" rx="5.5" ry="3.4" fill="#FF8FAB" opacity=".55"/>${pose==='boo'?`<path d="M50 68 Q60 84 70 68Z" fill="${INK}"/>`:`<path d="M52 70 Q60 77 68 70" ${st(3)}/>`}`;
+  const late=pose==='ears'||pose==='peek';
+  const hands=pose==='peek'?`<g stroke="rgba(59,42,90,.35)" stroke-width="1.6"><ellipse cx="48" cy="59" rx="10" ry="11" fill="${sk}"/><ellipse cx="72" cy="59" rx="10" ry="11" fill="${sk}"/><path d="M43 52 V60 M48 50 V60 M53 52 V60 M67 52 V60 M72 50 V60 M77 52 V60" fill="none" stroke-linecap="round"/></g>`:'';
+  return sv('0 0 120 170',`${motion}<circle cx="24" cy="58" r="15" fill="${hr}"/><circle cx="96" cy="58" r="15" fill="${hr}"/>${legs}<rect x="54" y="80" width="12" height="14" rx="5" fill="${sk}"/><path d="M44 90 Q60 84 76 90 L90 138 Q60 148 30 138 Z" fill="${dress}"/><path d="M50 90 Q60 99 70 90" ${st(3,'#fff')}/>${late?'':arms}${head}${late?arms+hands:''}`);
 }
 function babyFace(cx,cy,s,mood){
   const p=(x,y)=>`${cx+(x-60)*s} ${cy+(y-56)*s}`;
@@ -469,7 +481,7 @@ function parentParts(v){
 function parentSVG(v='mom',arms='down'){
   const P=parentParts(v);
   const armL=`<line x1="40" y1="122" x2="30" y2="178" stroke="${P.shirt}" stroke-width="16" stroke-linecap="round"/><circle cx="30" cy="184" r="9" fill="${P.sk}"/>`;
-  const armR=arms==='wave'?`<line x1="100" y1="122" x2="124" y2="72" stroke="${P.shirt}" stroke-width="16" stroke-linecap="round"/><circle cx="127" cy="64" r="9" fill="${P.sk}"/>`:`<line x1="100" y1="122" x2="110" y2="178" stroke="${P.shirt}" stroke-width="16" stroke-linecap="round"/><circle cx="110" cy="184" r="9" fill="${P.sk}"/>`;
+  const armR=arms==='push'?`<line x1="100" y1="122" x2="160" y2="134" stroke="${P.shirt}" stroke-width="16" stroke-linecap="round"/><circle cx="167" cy="136" r="9" fill="${P.sk}"/>`:arms==='wave'?`<line x1="100" y1="122" x2="124" y2="72" stroke="${P.shirt}" stroke-width="16" stroke-linecap="round"/><circle cx="127" cy="64" r="9" fill="${P.sk}"/>`:`<line x1="100" y1="122" x2="110" y2="178" stroke="${P.shirt}" stroke-width="16" stroke-linecap="round"/><circle cx="110" cy="184" r="9" fill="${P.sk}"/>`;
   return sv('0 0 140 262',P.back+P.legs+armL+armR+P.body+P.head);
 }
 function nursingSVG(){
@@ -520,8 +532,20 @@ const ART={
   question:()=>s100(`<path d="${DROP_D}" fill="#4FB3F6"/><path d="M40 52 Q40 40 50 40 Q60 40 60 50 Q60 58 50 60 V66" ${st(7,'#fff')}/><circle cx="50" cy="78" r="4.5" fill="#fff"/>`),
   wave:()=>s100(`<rect x="30" y="20" width="11" height="40" rx="5.5" fill="${S.skin}"/><rect x="43" y="12" width="11" height="44" rx="5.5" fill="${S.skin}"/><rect x="56" y="16" width="11" height="40" rx="5.5" fill="${S.skin}"/><rect x="69" y="26" width="10" height="32" rx="5" fill="${S.skin}"/><rect x="28" y="44" width="52" height="42" rx="20" fill="${S.skin}"/><rect x="16" y="50" width="11" height="26" rx="5.5" fill="${S.skin}" transform="rotate(-30 21 63)"/><path d="M12 20 Q6 30 12 40 M88 20 Q94 30 88 40" ${st(4,'#9B7BFF')}/>`),
   balloon:c=>sv('0 0 60 100',`<path d="M30 70 Q24 84 32 98" stroke="#9B8FB8" stroke-width="2" fill="none"/><ellipse cx="30" cy="34" rx="26" ry="32" fill="${c}"/><path d="M26 65 L34 65 L30 72Z" fill="${c}"/><ellipse cx="20" cy="22" rx="6" ry="9" fill="#fff" opacity=".45"/>`),
+  stop:()=>s100(`<polygon points="30,6 70,6 94,30 94,70 70,94 30,94 6,70 6,30" fill="#E8553E" stroke="#fff" stroke-width="5" stroke-linejoin="round"/><text x="50" y="60" text-anchor="middle" font-family="Fredoka, system-ui, sans-serif" font-weight="700" font-size="26" fill="#fff">STOP</text>`),
+  loud:()=>s100(`<path d="M14 40 H30 L62 18 V82 L30 60 H14Z" fill="#E8553E" stroke="#E8553E" stroke-width="5" stroke-linejoin="round"/><path d="M72 34 Q80 50 72 66 M80 24 Q96 50 80 76 M88 14 Q110 50 88 86" ${st(6,'#E8553E')}/>`),
+  soft:()=>s100(`<path d="${HEART_D}" fill="#FF9EC4"/><circle cx="38" cy="44" r="4.5" fill="#fff"/><circle cx="62" cy="44" r="4.5" fill="#fff"/><path d="M38 56 Q50 66 62 56" ${st(5,'#fff')}/>`),
+  cloth:()=>sv('0 0 160 120',`<path d="M10 112 Q2 62 28 30 Q80 -4 132 30 Q158 62 150 112 Q120 100 80 114 Q40 100 10 112Z" fill="#B39DFF"/><circle cx="50" cy="50" r="7" fill="#fff" opacity=".7"/><circle cx="90" cy="36" r="6" fill="#fff" opacity=".7"/><circle cx="110" cy="74" r="7" fill="#fff" opacity=".7"/><circle cx="62" cy="86" r="6" fill="#fff" opacity=".7"/>`),
   crown:()=>sv('0 0 100 70',`<path d="M8 60 L14 18 L34 40 L50 10 L66 40 L86 18 L92 60Z" fill="#FFC94A" stroke="#FFC94A" stroke-width="6" stroke-linejoin="round"/><circle cx="50" cy="46" r="6" fill="#FF5FA2"/><circle cx="28" cy="50" r="4" fill="#4FB3F6"/><circle cx="72" cy="50" r="4" fill="#3CCB9A"/>`)
 };
+function strollerSVG(buckled=false,mood='happy'){
+  const sk=S.skin,hr=S.hair;
+  const wheel=x=>`<g class="wheel"><circle cx="${x}" cy="154" r="15" fill="${INK}"/><circle cx="${x}" cy="154" r="5" fill="#fff"/><path d="M${x} 141 V167" stroke="#fff" stroke-width="2"/></g>`;
+  const belt=buckled
+    ?`<path d="M88 92 L112 108 M136 92 L112 108" ${st(5,'#3F4C9E')}/><rect x="104" y="102" width="16" height="12" rx="3" fill="#FFC94A"/>`
+    :`<path d="M88 92 L98 104 M136 92 L126 104" ${st(5,'#3F4C9E')}/><rect x="91" y="103" width="12" height="10" rx="3" fill="#FFC94A"/><rect x="121" y="103" width="12" height="10" rx="3" fill="#FFC94A"/>`;
+  return sv('0 0 200 170',`<path d="M24 30 L70 92" ${st(8,'#5C6BC0')}/><rect x="6" y="20" width="30" height="13" rx="6.5" fill="#3F4C9E" transform="rotate(-20 21 26)"/><path d="M84 128 L68 150 M158 128 L172 150" ${st(6,'#5C6BC0')}/>${wheel(68)}${wheel(172)}<circle cx="100" cy="66" r="20" fill="${sk}"/><path d="M100 46 C95 39 99 33 105 35" stroke="${hr}" stroke-width="3.5" fill="none" stroke-linecap="round"/>${babyFace(100,66,.6,mood)}<path d="M62 76 H178 Q182 132 122 134 Q66 132 62 76Z" fill="#FF8FB8"/><path d="M70 84 H172" ${st(4,'#fff')} opacity=".5"/><path d="M122 76 Q124 22 178 24 Q190 50 180 76Z" fill="#FF5FA2"/><path d="M140 30 Q150 50 150 76 M160 26 Q168 50 166 76" ${st(2.5,'#fff')} opacity=".4"/>${belt}`);
+}
 function noteStarSVG(c){return s100(`<path d="${STAR_D}" fill="${c}" stroke="#fff" stroke-width="5" stroke-linejoin="round"/><circle cx="42" cy="50" r="3.5" fill="${INK}"/><circle cx="58" cy="50" r="3.5" fill="${INK}"/><path d="M44 58 Q50 63 56 58" ${st(3)}/>`)}
 function feelSVG(k){
   const P={happy:'#FFD84D',excited:'#FFB020',sad:'#8EC9F5',mad:'#FF8A7A',worried:'#C9B8F5',turn:'#FFB3D1',calm:'#A6E3C8'};
@@ -550,7 +574,9 @@ function stopIcon(name,c){
     bath:`<ellipse cx="56" cy="66" rx="32" ry="18" fill="#fff"/><circle cx="38" cy="40" r="16" fill="#fff"/><path d="M22 38 L8 43 L22 48Z" fill="#FFB020"/><circle cx="36" cy="36" r="3.5" fill="${c}"/>`,
     lullaby:`<path d="M40 74 V22 L78 14 V62" ${st(9,'#fff')}/><ellipse cx="30" cy="76" rx="14" ry="10" fill="#fff"/><ellipse cx="68" cy="66" rx="14" ry="10" fill="#fff"/>`,
     feel:`<path d="${HEART_D}" fill="#fff"/><circle cx="38" cy="44" r="4.5" fill="${c}"/><circle cx="62" cy="44" r="4.5" fill="${c}"/><path d="M38 56 Q50 66 62 56" ${st(5,c)}/>`,
-    love:`<path d="${HEART_D}" fill="#fff"/><path d="${HEART_D}" fill="${c}" transform="translate(30 30) scale(.4)"/>`
+    love:`<path d="${HEART_D}" fill="#fff"/><path d="${HEART_D}" fill="${c}" transform="translate(30 30) scale(.4)"/>`,
+    stroller:`<path d="M14 26 L36 56" ${st(7,'#fff')}/><path d="M30 50 H92 Q94 80 62 82 Q32 80 30 50Z" fill="#fff"/><path d="M60 50 Q62 18 92 20 Q98 34 94 50Z" fill="#fff" opacity=".75"/><circle cx="40" cy="88" r="9" fill="#fff"/><circle cx="84" cy="88" r="9" fill="#fff"/>`,
+    peek:`<circle cx="50" cy="52" r="36" fill="#fff"/><circle cx="38" cy="48" r="5" fill="${c}"/><circle cx="62" cy="48" r="5" fill="${c}"/><path d="M38 62 Q50 74 62 62Z" fill="${c}"/><rect x="6" y="30" width="20" height="34" rx="10" fill="#fff" stroke="${c}" stroke-width="4" transform="rotate(-18 16 47)"/><rect x="74" y="30" width="20" height="34" rx="10" fill="#fff" stroke="${c}" stroke-width="4" transform="rotate(18 84 47)"/>`
   };
   return s100(I[name]||'');
 }
@@ -580,11 +606,14 @@ const ITEMS={
   warm:{art:ART.warm,bg:'#FFE3D3',sh:'#F5BFA3'},
   duck:{art:duckSVG,bg:'#FFF6CC',sh:'#F0DF8A'},
   book:{art:ART.book,bg:'#FFE1EC',sh:'#F5B9CF',no:"A book? It would get all soggy!"},
-  blocks:{art:ART.blocks,bg:'#E2F6EE',sh:'#B5E3CF',no:"Blocks? Those are too hard and heavy for the bath!"}
+  blocks:{art:ART.blocks,bg:'#E2F6EE',sh:'#B5E3CF',no:"Blocks? Those are too hard and heavy for the bath!"},
+  stop:{art:ART.stop,bg:'#FFE3DE',sh:'#F5B9AE'},
+  soft:{art:ART.soft,bg:'#FFE1EC',sh:'#F5B9CF'},
+  loud:{art:ART.loud,bg:'#FFE3DE',sh:'#F5B9AE'}
 };
 
 /* ---------- scene plumbing ---------- */
-const ROOMBG={start:'#FFE9F2',path:'#DFF5EC',nursery:'#F2D3A8',night:'#50508F',living:'#E9C48F',bath:'#F2D3A8'};
+const ROOMBG={start:'#FFE9F2',path:'#DFF5EC',nursery:'#F2D3A8',night:'#50508F',living:'#E9C48F',bath:'#F2D3A8',park:'#A6D98E'};
 let TOK=0,timers=[];
 function newScene(html,{room='nursery',home=false,bar=true}={}){
   TOK++;stopSpeech();
@@ -692,16 +721,18 @@ const GAMES={
   milk:{c:'#F06292',d:'#C94A77',fn:gameMilk},
   cry:{c:'#4FB3F6',d:'#2E8FD0',fn:gameCry},
   gentle:{c:'#E57BD0',d:'#C2549F',fn:gameGentle},
+  peek:{c:'#F06A6A',d:'#C94848',fn:gamePeek},
   wash:{c:'#3CCB9A',d:'#26A57C',fn:gameWash},
   ask:{c:'#FFB020',d:'#D98E0A',fn:gameAsk},
   diaper:{c:'#8E7CF0',d:'#6B59D1',fn:gameDiaper},
   bath:{c:'#26C6DA',d:'#1497A8',fn:gameBath},
+  stroller:{c:'#8BC34A',d:'#689F38',fn:gameStroller},
   lullaby:{c:'#5C6BC0',d:'#3F4C9E',fn:gameLullaby},
   feel:{c:'#FF8A5B',d:'#E06A3C',fn:gameFeel},
   love:{c:'#EF5DA8',d:'#C83F86',fn:gameLove}
 };
-const PATH=[[150,690],[370,700],[590,680],[810,700],[1010,560],[790,450],[570,470],[350,450],[160,320],[390,210]];
-const END=[640,190];
+const PATH=[[120,705],[310,715],[500,700],[690,712],[900,690],[1040,540],[860,450],[650,470],[440,455],[230,470],[110,320],[300,210]];
+const END=[560,190];
 
 function drawStickers(pop){
   $('#stickers').innerHTML=ORDER.map(k=>S.stars[k]?`<i class="${pop===k?'pop':''}" style="background:${GAMES[k].c}">${UI.starW}</i>`:'<i></i>').join('');
@@ -733,7 +764,7 @@ function startScreen(){
 
 function goHome(intro,justDone){
   const next=ORDER.find(k=>!S.stars[k]);
-  const pts=[[60,780],...PATH,END].map(p=>p.join(',')).join(' ');
+  const pts=[[40,790],...PATH,END].map(p=>p.join(',')).join(' ');
   let h=`<div class="blob" style="left:-60px;top:150px;width:360px;height:360px;background:#EAF9F2"></div>
     <div class="blob" style="left:430px;top:300px;width:300px;height:300px;background:#EAF9F2"></div>
     <div class="blob" style="left:880px;top:560px;width:380px;height:380px;background:#EAF9F2"></div>
@@ -749,9 +780,9 @@ function goHome(intro,justDone){
     h+=`<button class="stop" data-k="${k}" aria-label="${k}" style="left:${x-52}px;top:${y-52}px;--c:${g.c};--d:${g.d};animation-delay:${i*.05}s">${stopIcon(k,g.c)}${S.stars[k]?`<span class="badge">${UI.starW}</span>`:''}</button>`;
   });
   h+=`<button class="surprise${allDone()?' ready':''}" id="surprise" aria-label="Surprise" style="left:${END[0]-68}px;top:${END[1]-68}px">${FX.star()}${allDone()?'':`<span class="lock">${UI.lock}</span>`}</button>`;
-  h+=chr(babySVG('happy'),722,96,108,'happy');
+  h+=chr(babySVG('happy'),640,96,108,'happy');
   if(next){const i=ORDER.indexOf(next),[x,y]=PATH[i];h+=chr(sisterSVG('wave'),x+44,y-152,88)}
-  else h+=chr(sisterSVG('wave'),462,64,88);
+  else h+=chr(sisterSVG('wave'),396,74,88);
   h+=`<button class="gear" id="gear" aria-label="Grown-up settings">${UI.gear}</button>`;
   const t=newScene(h,{room:'path',home:true});
   drawStickers(justDone);
@@ -1124,6 +1155,131 @@ async function gameBath(){
   await reward(t,'bath',gameBath);
 }
 
+/* ---- peek-a-boo (new) ---- */
+async function gamePeek(){
+  const t=newScene(`${win(70,90,200,150)}
+    <div class="abs" style="left:230px;top:470px;width:360px;height:84px;border-radius:50%;background:#C9F0E0"></div>
+    ${chr(babySVG('happy',{blanket:'#FFD84D'}),290,262,230,'happy','baby')}
+    <button class="abs char" id="kid" aria-label="Big sister" style="left:640px;top:320px;width:170px">${sisterSVG('stand')}</button>
+    <div class="abs" id="toyArea" style="left:880px;top:430px;width:170px;height:130px">
+      <div class="abs box toy" id="toy" style="left:35px;top:20px;width:100px;height:100px"></div>
+      <button class="cloth" id="cloth" aria-label="Blanket" style="left:0;top:4px;width:170px;height:128px">${ART.cloth()}</button>
+    </div>
+    <div class="tray" id="ch"></div>`,{room:'living'});
+  const sp=(x,o)=>speak(t,x,o),w=ms=>pause(t,ms),ch=$('#ch'),baby=$('#baby'),kid=$('#kid'),cloth=$('#cloth'),toy=$('#toy');
+  $('#toyArea').classList.add('hidden');
+  const pose=p=>{kid.innerHTML=sisterSVG(p)};
+  await sp(`Babies LOVE peek-a-boo! Let's play with ${B()}.`);
+  const rounds=[
+    {cover:`First, cover your eyes. Tap big sister!`,where:`Where's ${K()}? ${B()} is looking for you...`},
+    {cover:`Again! Tap to cover your eyes.`,where:`Where did you go?`},
+    {cover:`One more time! Tap to cover your eyes.`,where:`Hmm, where's ${K()}?`}
+  ];
+  for(const [i,r] of rounds.entries()){
+    setLast(r.cover);await sp(r.cover);
+    await tapOnce(t,kid);
+    pose('peek');setBaby(baby,'oops',{blanket:'#FFD84D'});sfx.pop();
+    await sp(r.where);
+    const q=i===0?`Now tap to open your hands, and say: Peek-a-boo!`:`Tap to say peek-a-boo!`;
+    setLast(q);await sp(q);
+    await tapOnce(t,kid);
+    pose('boo');setBaby(baby,'giggle',{blanket:'#FFD84D'});sfx.giggle();burst(baby,['heart','sparkle','heart2'],6+i*2);
+    await sp(`Peek-a-boo!`,{pitch:1.35});
+    await sp(i===0?`Hee hee! ${B()} giggled! Babies love to see your happy face.`:i===1?`Giggle, giggle!`:`She thinks you're so funny!`);
+    pose('stand');
+  }
+  const q2=`How should we say peek-a-boo to a baby?`;
+  setLast(q2);await sp(`${q2} With a soft, happy voice, or a big, loud roar?`);
+  await choose(t,ch,shuffle(['soft','loud']),'soft',()=>{setBaby(baby,'crying',{blanket:'#FFD84D'});timers.push(setTimeout(()=>setBaby(baby,'happy',{blanket:'#FFD84D'}),2200));return `Oh no, too loud! That scared ${B()}. Babies like soft, happy voices.`});
+  ch.innerHTML='';setBaby(baby,'happy',{blanket:'#FFD84D'});
+  await sp(`Yes! A soft, happy voice. Not too loud, so ${B()} doesn't get scared.`);
+  $('#toyArea').classList.remove('hidden');$('#toyArea').classList.add('pop');
+  await sp(`Babies love finding hidden things too!`);
+  for(const [i,[id,name]] of [['teddy','teddy'],['duck','duck']].entries()){
+    toy.innerHTML=ITEMS[id].art();cloth.classList.remove('lift');
+    await w(700);
+    const q3=`Where did the ${name} go? Tap the blanket!`;
+    setLast(q3);await sp(q3);
+    await tapOnce(t,cloth);
+    cloth.classList.add('lift');sfx.pop();toy.classList.remove('pop');void toy.offsetWidth;toy.classList.add('pop');
+    setBaby(baby,'giggle',{blanket:'#FFD84D'});burst(toy,['sparkle','heart'],5);sfx.giggle();
+    await sp(`Peek-a-boo, ${name}! There it is!`);
+    setBaby(baby,'happy',{blanket:'#FFD84D'});
+  }
+  await w(500);
+  setBaby(baby,'drowsy',{blanket:'#FFD84D'});tone(600,.9,{vol:.15,slide:300,attack:.2});
+  await sp(`Uh oh. ${B()} is yawning. When a baby is tired or fussy, it's time to stop playing and let her rest.`);
+  setBaby(baby,'sleepy',{blanket:'#FFD84D'});burst(baby,'z',3);
+  await sp(`You're such a fun big sister!`);
+  await reward(t,'peek',gamePeek);
+}
+
+/* ---- stroller walk (new) ---- */
+async function gameStroller(){
+  const dad=Math.random()<.5,P=dad?'Daddy':'Mommy';
+  const GX0=-40,GX1=342;
+  const t=newScene(`<div class="abs" style="left:960px;top:96px;width:76px;height:76px;border-radius:50%;background:#FFD84D"></div>
+    <div class="pcloud" style="left:160px;top:120px;width:140px"></div><div class="pcloud" style="left:620px;top:170px;width:110px"></div>
+    <div class="tree" style="left:60px;top:250px">${sv('0 0 140 190',`<rect x="60" y="90" width="20" height="100" rx="8" fill="#9C6B45"/><circle cx="70" cy="70" r="62" fill="#7CC46A"/><circle cx="96" cy="50" r="36" fill="#8BD178"/>`)}</div>
+    <div class="tree" style="left:470px;top:230px">${sv('0 0 140 210',`<rect x="60" y="100" width="20" height="110" rx="8" fill="#9C6B45"/><circle cx="70" cy="76" r="66" fill="#7CC46A"/><circle cx="40" cy="56" r="34" fill="#8BD178"/>`)}</div>
+    <div class="sidewalk" style="left:0;width:830px"></div><div class="sidewalk" style="left:1030px;width:150px"></div>
+    <div class="street"></div><div class="crosswalk"></div>
+    <div class="abs hidden pop" id="sign" style="left:790px;top:330px;width:90px;height:240px"><div class="abs" style="left:40px;top:70px;width:10px;height:170px;background:#9AA3B5;border-radius:5px"></div><div class="abs box" style="left:0;top:0;width:90px;height:90px">${ART.stop()}</div></div>
+    <div class="abs" id="grp" style="left:${GX0}px;top:330px;width:500px;height:340px">
+      <div class="abs fit" id="strl" style="left:250px;top:136px;width:230px">${strollerSVG(false)}</div>
+      <div class="abs char hidden pop" id="par" style="left:70px;top:0;width:170px">${parentSVG(dad?'dad':'mom','push')}</div>
+      <div class="abs char" id="kid" style="left:130px;top:96px;width:150px">${sisterSVG('push')}</div>
+      <button class="pushzone hidden" id="pz" aria-label="Push the stroller" style="left:120px;top:90px;width:370px;height:240px"></button>
+      <button class="abs hidden" id="buckle" aria-label="Buckle" style="left:340px;top:226px;width:90px;height:70px;border-radius:30px"></button>
+    </div>
+    <div class="tray" id="ch"></div>`,{room:'park'});
+  const sp=(x,o)=>speak(t,x,o),w=ms=>pause(t,ms),ch=$('#ch'),grp=$('#grp'),strl=$('#strl'),kid=$('#kid'),par=$('#par');
+  await sp(`It's time for a walk in the park with ${B()}! Pushing the stroller is a big job.`);
+  const q=`Who needs to be right next to you when you push the stroller?`;
+  setLast(q);await sp(q);
+  await choose(t,ch,shuffle(['mom','dad','teddy']),['mom','dad'],()=>`A teddy bear can't keep ${B()} safe! A grown-up always stays right next to you.`);
+  ch.innerHTML='';par.classList.remove('hidden');sfx.ding();
+  await sp(`Yes! A grown-up always stays right next to you, with a hand on the stroller too.`);
+  const bq=`First, buckle ${B()} in, so she's safe and snug. Tap the buckle!`;
+  setLast(bq);await sp(bq);
+  const bk=$('#buckle');bk.classList.remove('hidden');strl.classList.add('target');
+  await new Promise(res=>{bk.onclick=()=>{if(t!==TOK)return;bk.onclick=null;bk.classList.add('hidden');strl.classList.remove('target');res()}});
+  strl.innerHTML=strollerSVG(true);tone(1400,.06,{type:'square',vol:.12});tone(1800,.06,{type:'square',vol:.12,at:.08});burst(strl,'sparkle',4);
+  await sp(`Click! All buckled.`);
+  const pq=`Now put your finger on the stroller and hold it to push. Nice and slow!`;
+  setLast(pq);await sp(pq);
+  const pz=$('#pz');pz.classList.remove('hidden');
+  await new Promise(res=>{
+    strl.classList.add('target');
+    let holding=false,last=0,x=GX0,said=0,nud=0;
+    const step=now=>{
+      if(t!==TOK||!holding)return;
+      const dt=Math.min(.05,(now-last)/1000);last=now;x+=85*dt;grp.style.left=x+'px';
+      if(!said&&x>GX0+(GX1-GX0)*.4){said=1;speakSoft(t,'Walking feet, not running feet! Nice and slow.')}
+      if(x>=GX1){holding=false;grp.classList.remove('rolling');pz.onpointerdown=pz.onpointerup=pz.onpointercancel=null;pz.classList.add('hidden');res();return}
+      requestAnimationFrame(step);
+    };
+    pz.onpointerdown=e=>{if(t!==TOK)return;try{pz.setPointerCapture(e.pointerId)}catch(_){}holding=true;strl.classList.remove('target');grp.classList.add('rolling');last=performance.now();requestAnimationFrame(step)};
+    pz.onpointerup=pz.onpointercancel=()=>{
+      if(!holding)return;holding=false;grp.classList.remove('rolling');strl.classList.add('target');
+      if(performance.now()-nud>4000){nud=performance.now();speakSoft(t,'Keep holding to push.')}
+    };
+  });
+  $('#sign').classList.remove('hidden');sfx.boing();
+  await sp(`Stop! We're at the street.`);
+  const sq=`What do we do at the street?`;
+  setLast(sq);await sp(sq);
+  await choose(t,ch,shuffle(['stop','grab']),'stop',()=>`Whoa! Never go into the street. Stop, and wait for the grown-up!`);
+  ch.innerHTML='';
+  await sp(`Yes! Big sisters always stop at the street. ${P} pushes the stroller across, and you hold ${dad?'his':'her'} hand.`);
+  kid.innerHTML=sisterSVG('stand');kid.style.left='60px';kid.style.top='96px';
+  await sp(`Look both ways... and across we go!`);
+  grp.classList.add('rolling');grp.style.transition='left 4s linear';grp.style.left='1240px';
+  await w(4200);
+  await sp(`Great walking! Remember: only push the stroller when a grown-up is right next to you.`);
+  await reward(t,'stroller',gameStroller);
+}
+
 /* ---- 8: lullaby maker (new) ---- */
 async function gameLullaby(){
   const POS={C:[560,560],D:[660,470],E:[760,395],F:[860,335],G:[960,290],A:[1060,255]};
@@ -1296,8 +1452,8 @@ async function finale(){
   sky.style.pointerEvents='none';
   timers.push(setInterval(launch,850));launch();
   await sp(`You did it, ${K()}! You learned so much about being a big sister.`);
-  await sp(`Babies drink milk from Mommy. Babies cry when they need something. You use gentle touches, wash your hands, and ask before you hold her.`);
-  await sp(`You can help with diapers and bath time, sing her a lullaby, and tell Mommy and Daddy how you feel. And your family's love keeps growing!`);
+  await sp(`Babies drink milk from Mommy. Babies cry when they need something. You use gentle touches, play peek-a-boo, wash your hands, and ask before you hold her.`);
+  await sp(`You can help with diapers and bath time, push the stroller with a grown-up, sing her a lullaby, and tell Mommy and Daddy how you feel. And your family's love keeps growing!`);
   setLast(`Pop the balloons!`);
   await sp(`You are going to be the best big sister ever! Pop the balloons!`);
 }
