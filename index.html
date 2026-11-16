@@ -353,14 +353,15 @@ const sfx={
 /* ---------- voice ---------- */
 const hasTTS='speechSynthesis' in window;
 let voice=null,curFinish=null,lastPrompt='';
+const SYS_VOICE='__system__'; // "System default": leave the voice unset so the OS picks (on iPad: Settings → Accessibility → Spoken Content → Voices)
 const NOVELTY=/^(Albert|Bad News|Bahh|Bells|Boing|Bubbles|Cellos|Good News|Jester|Organ|Superstar|Trinoids|Whisper|Wobble|Zarvox|Junior|Ralph|Fred|Kathy|Grandma|Grandpa|Eddy|Flo|Reed|Rocko|Sandy|Shelley)\b/i;
 function voiceRank(v){let r=0;if(/premium/i.test(v.name))r-=300;else if(/enhanced/i.test(v.name))r-=200;if(/en[-_]US/i.test(v.lang))r-=20;if(/^(Ava|Zoe|Samantha|Allison|Susan|Evan|Nathan|Tom|Joelle|Noelle)/i.test(v.name))r-=10;return r}
 function englishVoices(){if(!hasTTS)return[];return speechSynthesis.getVoices().filter(v=>/^en[-_]/i.test(v.lang)&&!NOVELTY.test(v.name)).sort((a,b)=>voiceRank(a)-voiceRank(b)||a.name.localeCompare(b.name))}
-function pickVoice(){if(!hasTTS)return;const vs=englishVoices();voice=(S.voiceName&&vs.find(v=>v.name===S.voiceName))||vs[0]||null;fillVoiceList()}
+function pickVoice(){if(!hasTTS)return;if(S.voiceName===SYS_VOICE){voice=null}else{const vs=englishVoices();voice=(S.voiceName&&vs.find(v=>v.name===S.voiceName))||vs[0]||null}fillVoiceList()}
 function fillVoiceList(){
   const sel=$('#voiceSel');if(!sel)return;const vs=englishVoices();
-  sel.innerHTML=vs.map(v=>`<option value="${v.name.replace(/"/g,'&quot;')}">${v.name}${/premium|enhanced/i.test(v.name)?' ★':''} — ${v.lang}</option>`).join('')||'<option value="">Default voice</option>';
-  if(voice)sel.value=voice.name;
+  sel.innerHTML=`<option value="${SYS_VOICE}">System default (from device settings)</option>`+vs.map(v=>`<option value="${v.name.replace(/"/g,'&quot;')}">${v.name}${/premium|enhanced/i.test(v.name)?' ★':''} — ${v.lang}</option>`).join('');
+  sel.value=(S.voiceName===SYS_VOICE||!voice)?SYS_VOICE:voice.name;
 }
 if(hasTTS){pickVoice();speechSynthesis.onvoiceschanged=pickVoice}
 function stopSpeech(){const f=curFinish;curFinish=null;if(f)f();if(hasTTS){try{speechSynthesis.cancel()}catch(e){}}}
@@ -373,7 +374,7 @@ function say(text,o={}){
     curFinish=fin;
     if(!hasTTS){to=setTimeout(fin,600+words*380);return}
     const u=new SpeechSynthesisUtterance(text);
-    if(voice)u.voice=voice;u.lang=(voice&&voice.lang)||'en-US';
+    if(voice){u.voice=voice;u.lang=voice.lang} // no voice → no lang either, so the OS default voice is used (page is lang="en")
     u.rate=rate;u.pitch=o.pitch||1.12;u.volume=1;u.onend=fin;u.onerror=fin;
     to=setTimeout(fin,2500+words*650/rate);
     try{speechSynthesis.speak(u)}catch(e){fin()}
@@ -1325,11 +1326,11 @@ function openSettings(){
   const r=$('#rate');r.value=String(S.rate);if(r.value!==String(S.rate))r.value='0.92';
   swatches($('#skinSw'),SKINS,'skin');swatches($('#hairSw'),HAIRS,'hair');
   fillVoiceList();
-  $('#voiceNote').textContent=hasTTS?`★ = higher-quality voice. More voices: iPad Settings → Accessibility → Spoken Content → Voices → English. The "Premium" ones sound best. Download one, then reload this page.`:'This browser has no built-in voice, so the game will be silent except for sound effects.';
+  $('#voiceNote').textContent=hasTTS?`★ = higher-quality voice. More voices: iPad Settings → Accessibility → Spoken Content → Voices → English. The "Premium" ones sound best. If a Premium voice won't play when picked here (common in Safari on iPad), choose it as the voice in that iPad Settings screen, then pick "System default" here.`:'This browser has no built-in voice, so the game will be silent except for sound effects.';
   $('#settings').classList.remove('hidden');
 }
 function readSettings(){
-  const vs=$('#voiceSel');if(vs&&vs.value){S.voiceName=vs.value;const v=englishVoices().find(x=>x.name===vs.value);if(v)voice=v}
+  const vs=$('#voiceSel');if(vs&&vs.value){S.voiceName=vs.value;if(vs.value===SYS_VOICE)voice=null;else{const v=englishVoices().find(x=>x.name===vs.value);if(v)voice=v}}
   S.kid=$('#kidName').value.trim().slice(0,30);S.baby=$('#babyName').value.trim().slice(0,30);S.rate=parseFloat($('#rate').value)||0.92;
   if(draft.skin)S.skin=draft.skin;if(draft.hair)S.hair=draft.hair;save();
 }
